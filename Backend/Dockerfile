@@ -1,16 +1,19 @@
-# Backend/Dockerfile
-FROM node:18
+# Etapa 1: Compila TypeScript
+FROM node:18 AS build
 
-# Crear directorio de trabajo
 WORKDIR /app
-
-# Copiar archivos y dependencias
 COPY package*.json ./
 RUN npm install
 
-# Copiar el resto de los archivos
 COPY . .
+RUN npx tsc
 
-# Exponer puerto y correr servidor
-EXPOSE 3017
-CMD ["node", "src/server.js"]
+# Etapa 2: Ejecuta backend
+FROM node:18
+
+WORKDIR /app
+COPY --from=build /app/dist ./dist
+COPY package*.json ./
+RUN npm install --only=production
+
+CMD ["node", "dist/index.js"]
